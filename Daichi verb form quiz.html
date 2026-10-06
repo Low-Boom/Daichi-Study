@@ -41,6 +41,9 @@ body{
 }
 .jp-display{font-family:"Shippori Mincho","Hiragino Mincho ProN","Yu Mincho","Noto Serif JP",serif}
 main{max-width:34rem; margin:0 auto; padding:1.25rem 1rem 3rem}
+.skip-link{position:absolute;top:.5rem;left:.5rem;z-index:1;padding:.6rem .9rem;background:var(--card);color:var(--ink);border:2px solid var(--indigo);border-radius:.4rem;transform:translateY(-200%)}
+.skip-link:focus{transform:translateY(0)}
+.visually-hidden{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 h1{font-size:1.5rem; margin:.5rem 0 .25rem; font-weight:700}
 h2{font-size:1rem; margin:1.5rem 0 .5rem; font-weight:700}
 p{margin:.25rem 0}
@@ -108,12 +111,15 @@ details.more h2{margin-top:1rem}
 </style>
 </head>
 <body>
-<main>
+<a class="skip-link" href="#main-content">Skip to main content</a>
+<main id="main-content">
 
 <!-- ===== Setup screen ===== -->
 <section id="setup">
+  <header>
   <h1>Verb form quiz</h1>
   <p class="sub">Forms from Daichi 1 and 2. Select a book, or open the menu to select individual forms and the question type, then start.</p>
+  </header>
 
   <h2>Books</h2>
   <div class="chips" id="bookChips"></div>
@@ -150,6 +156,7 @@ details.more h2{margin-top:1rem}
 
 <!-- ===== Quiz screen ===== -->
 <section id="quiz" class="hidden" aria-live="polite">
+  <h1 class="visually-hidden" id="quizHeading">Quiz</h1>
   <div class="topbar"><span id="qCount"></span><span id="qScore"></span></div>
   <div class="progress"><i id="bar"></i></div>
   <div class="prompt">

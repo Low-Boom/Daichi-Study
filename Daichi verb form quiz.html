@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Daichi 2 verb form quiz</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+/* ---------- Color tokens: light default, dark via OS or data-theme ---------- */
+:root{
+  --paper:#EDF1F5; --card:#FFFFFF; --ink:#1A2330; --muted:#5B6878;
+  --indigo:#2D4A80; --indigo-soft:#DCE4F2; --line:#C9D3DF;
+  --ok:#2E7550; --ok-soft:#DDEFE4; --bad:#A83636; --bad-soft:#F6E0E0;
+  --gold:#A9861C;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --paper:#141A23; --card:#1D2531; --ink:#E6EBF2; --muted:#9AA7B8;
+    --indigo:#8FA8DB; --indigo-soft:#26324A; --line:#334052;
+    --ok:#6FC497; --ok-soft:#1C3328; --bad:#E58585; --bad-soft:#3A2224;
+    --gold:#D8B64B;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#141A23; --card:#1D2531; --ink:#E6EBF2; --muted:#9AA7B8;
+  --indigo:#8FA8DB; --indigo-soft:#26324A; --line:#334052;
+  --ok:#6FC497; --ok-soft:#1C3328; --bad:#E58585; --bad-soft:#3A2224;
+  --gold:#D8B64B;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{
+  margin:0; background:var(--paper); color:var(--ink);
+  font-family:"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN","Yu Gothic","Noto Sans JP",system-ui,sans-serif;
+  font-size:1rem; line-height:1.55;
+}
+.jp-display{font-family:"Shippori Mincho","Hiragino Mincho ProN","Yu Mincho","Noto Serif JP",serif}
+main{max-width:34rem; margin:0 auto; padding:1.25rem 1rem 3rem}
+h1{font-size:1.5rem; margin:.5rem 0 .25rem; font-weight:700}
+h2{font-size:1rem; margin:1.5rem 0 .5rem; font-weight:700}
+p{margin:.25rem 0}
+.sub{color:var(--muted); font-size:.92rem}
+rt{font-size:.5em; color:var(--muted); font-family:"Zen Kaku Gothic New",sans-serif}
+body.no-furi rt{display:none}
+
+/* ---------- Setup screen chips ---------- */
+.chips{display:flex; flex-wrap:wrap; gap:.5rem}
+.chip{
+  border:1.5px solid var(--line); background:var(--card); color:var(--ink);
+  border-radius:999px; padding:.45rem .85rem; font:inherit; font-size:.92rem; cursor:pointer;
+}
+.chip[aria-pressed="true"]{background:var(--indigo); border-color:var(--indigo); color:var(--card)}
+.chip[aria-pressed="true"] rt{color:inherit; opacity:.8}
+.row{display:flex; gap:.5rem; flex-wrap:wrap; align-items:center}
+.btn{
+  font:inherit; font-weight:700; border:none; border-radius:.6rem; cursor:pointer;
+  padding:.8rem 1.2rem; background:var(--indigo); color:var(--card); width:100%; margin-top:1.5rem;
+}
+.btn.ghost{background:transparent; color:var(--indigo); border:1.5px solid var(--indigo)}
+.btn:disabled{opacity:.4; cursor:not-allowed}
+:focus-visible{outline:3px solid var(--gold); outline-offset:2px}
+/* Collapsible detail menu */
+details.more{margin-top:1rem; background:var(--card); border:1.5px solid var(--line); border-radius:.7rem; padding:.7rem .9rem}
+details.more>summary{cursor:pointer; font-weight:700}
+details.more>summary .sub{font-weight:400}
+details.more h2{margin-top:1rem}
+.warn{color:var(--bad); font-size:.9rem; min-height:1.3em}
+
+/* ---------- Quiz screen ---------- */
+.topbar{display:flex; justify-content:space-between; align-items:center; font-size:.9rem; color:var(--muted)}
+.progress{height:4px; background:var(--line); border-radius:2px; margin:.5rem 0 1.25rem; overflow:hidden}
+.progress>i{display:block; height:100%; background:var(--indigo); width:0; transition:width .25s}
+/* The prompt card is the one bold element: large mincho verb with furigana */
+.prompt{
+  background:var(--card); border-radius:1rem; padding:1.75rem 1rem 1.25rem; text-align:center;
+  border-top:5px solid var(--indigo);
+}
+.prompt .verb{font-size:clamp(2.4rem,11vw,3.4rem); line-height:1.6; font-weight:700}
+.prompt .task{margin-top:.5rem; color:var(--muted)}
+.prompt .task b{color:var(--ink)}
+.opts{display:grid; gap:.6rem; margin-top:1rem}
+.opt{
+  display:flex; gap:.75rem; align-items:center; text-align:left;
+  background:var(--card); color:var(--ink); border:1.5px solid var(--line);
+  border-radius:.7rem; padding:.7rem .9rem; font:inherit; font-size:1.25rem; cursor:pointer; line-height:1.7;
+}
+.opt .k{font-size:.75rem; color:var(--muted); border:1px solid var(--line); border-radius:.3rem; padding:0 .4rem; flex:none}
+.opt.ok{border-color:var(--ok); background:var(--ok-soft)}
+.opt.bad{border-color:var(--bad); background:var(--bad-soft)}
+.opt:disabled{cursor:default}
+.feedback{margin-top:1rem; padding:.9rem 1rem; border-radius:.7rem; background:var(--card); border-left:4px solid var(--line)}
+.feedback.ok{border-left-color:var(--ok)} .feedback.bad{border-left-color:var(--bad)}
+.feedback .verdict{font-weight:700}
+.feedback.ok .verdict{color:var(--ok)} .feedback.bad .verdict{color:var(--bad)}
+.feedback .rule{margin-top:.35rem; font-size:.95rem; line-height:1.9}
+
+/* ---------- Results screen ---------- */
+.score{font-size:3rem; font-weight:700; text-align:center; margin:1rem 0 0}
+.miss{background:var(--card); border-radius:.7rem; padding:.7rem .9rem; margin:.5rem 0; line-height:1.9}
+.miss .m{color:var(--muted); font-size:.85rem}
+.hidden{display:none}
+@media (prefers-reduced-motion:reduce){.progress>i{transition:none}}
+</style>
+</head>
+<body>
+<main>
+
+<!-- ===== Setup screen ===== -->
+<section id="setup">
+  <h1>Verb form quiz</h1>
+  <p class="sub">Forms from Daichi 1 and 2. Select a book, or open the menu to select individual forms and the question type, then start.</p>
+
+  <h2>Books</h2>
+  <div class="chips" id="bookChips"></div>
+  <div class="chips" style="margin-top:.5rem" id="helperChip"></div>
+
+  <details class="more" id="detailMenu">
+    <summary>Choose individual forms <span class="sub" id="selCount"></span></summary>
+    <h2>Daichi 1 forms</h2>
+    <div class="chips" id="formChips1"></div>
+    <h2>Daichi 2 forms</h2>
+    <div class="chips" id="formChips2"></div>
+    <h2>Helper stems: after the て form</h2>
+    <div class="chips" id="helpChips_te"></div>
+    <h2>Helper stems: after the ます stem</h2>
+    <div class="chips" id="helpChips_stem"></div>
+    <h2>Helper stems: after the dictionary form</h2>
+    <div class="chips" id="helpChips_dict"></div>
+    <div class="row" style="margin-top:.9rem">
+      <button class="chip" id="allForms" type="button" aria-pressed="false">Select all</button>
+    </div>
+  </details>
+
+
+  <h2>Number of questions</h2>
+  <div class="chips" id="countChips"></div>
+
+  <h2>Display</h2>
+  <div class="chips"><button class="chip" id="furiToggle" type="button" aria-pressed="true">Show furigana</button></div>
+
+  <p class="warn" id="setupWarn" role="alert"></p>
+  <button class="btn" id="startBtn" type="button">Start quiz</button>
+  <p class="sub" id="bestLine" style="margin-top:.75rem;text-align:center"></p>
+</section>
+
+<!-- ===== Quiz screen ===== -->
+<section id="quiz" class="hidden" aria-live="polite">
+  <div class="topbar"><span id="qCount"></span><span id="qScore"></span></div>
+  <div class="progress"><i id="bar"></i></div>
+  <div class="prompt">
+    <div class="verb jp-display" id="pVerb"></div>
+    <div class="task" id="pTask"></div>
+  </div>
+  <div class="opts" id="opts"></div>
+  <div id="fb"></div>
+  <button class="btn hidden" id="nextBtn" type="button">Next question</button>
+  <button class="btn ghost" id="quitBtn" type="button">Stop quiz</button>
+</section>
+
+<!-- ===== Results screen ===== -->
+<section id="results" class="hidden">
+  <h1>Results</h1>
+  <p class="score" id="rScore"></p>
+  <p class="sub" id="rLine" style="text-align:center"></p>
+  <div id="rMisses"></div>
+  <button class="btn" id="againBtn" type="button">Retry with same settings</button>
+  <button class="btn ghost" id="setupBtn" type="button">Change settings</button>
+</section>
+
+</main>
+<script>
+/* =====================================================================
+   DATA
+   Format: kanji(reading) → rendered as <ruby>. Kana stays as is.
+   All forms written out by hand (no generated conjugation) to avoid errors.
+   ===================================================================== */
+
+// Form metadata. "kind": conj = regular conjugation, keigo = special verbs.
+const FORMS = {
+  masu: {en:"Polite non-past",           jp:"",               kind:"conj", book:1},
+  masen:{en:"Polite negative",         jp:"",             kind:"conj", book:1},
+  mashi:{en:"Polite past",         jp:"",             kind:"conj", book:1},
+  msd:  {en:"Polite past negative",   jp:"",       kind:"conj", book:1},
+  dict: {en:"Dictionary form",     jp:"辞書形(じしょけい)",         kind:"conj", book:1},
+  te:   {en:"Connecting form",             jp:"",                 kind:"conj", book:1},
+  nai:  {en:"Plain negative",           jp:"",               kind:"conj", book:1},
+  ta:   {en:"Plain past",             jp:"",                 kind:"conj", book:1},
+  nakt: {en:"Plain past negative",       jp:"",           kind:"conj", book:1},
+  tara: {en:"Conditional (if / when)",    jp:"",               kind:"conj", book:1},
+  pot:  {en:"Potential",          jp:"可能形(かのうけい)",         kind:"conj", book:2},
+  vol:  {en:"Volitional",         jp:"意向形(いこうけい)",         kind:"conj", book:2},
+  ba:   {en:"Conditional",     jp:"条件形(じょうけんけい)",     kind:"conj", book:2},
+  imp:  {en:"Imperative",         jp:"命令形(めいれいけい)",       kind:"conj", book:2},
+  proh: {en:"Prohibitive",        jp:"禁止形(きんしけい)",         kind:"conj", book:2},
+  pass: {en:"Passive",            jp:"受身形(うけみけい)",         kind:"conj", book:2},
+  caus: {en:"Causative",          jp:"使役形(しえきけい)",         kind:"conj", book:2},
+  cp:   {en:"Causative-passive",  jp:"使役受身形(しえきうけみけい)", kind:"conj", book:2},
+  hon:  {en:"Honorific",          jp:"尊敬語(そんけいご)",         kind:"keigo", book:2},
+  hum:  {en:"Humble",             jp:"謙譲語(けんじょうご)",       kind:"keigo", book:2},
+};
+const CONJ_KEYS = ["pot","vol","ba","imp","proh","pass","caus","cp","masu","te","nai","ta","nakt","masen","mashi","msd","dict","tara"];
+const BOOKS = [1,2];
+
+// Meaning and use of each form, shown on the answer card.
+const USES = {
+  masen:"Polite non-past negative.",
+  mashi:"Polite past.",
+  msd:  "Polite past negative.",
+  dict: "Plain non-past form. Patterns: 〜ことができます (can), 〜前(まえ)に (before).",
+  tara: "Shows a condition (\"if\") or a time (\"when ... is done\"). It is the most flexible conditional: a request or an invitation can come after it.",
+  masu: "Polite non-past form. Use it with people you do not know well and at work.",
+  te:   "Connects actions (A and then B). It also makes many patterns: 〜てください (please do), 〜ています (an action in progress or a state), 〜てもいいです (permission).",
+  nai:  "Plain negative. Patterns: 〜ないでください (please do not), 〜なければなりません (must).",
+  ta:   "Plain past. Patterns: 〜たことがあります (have done before), 〜たほうがいいです (should).",
+  nakt: "Plain past negative. It is the plain form of 〜ませんでした.",
+  pot:  "Shows ability or possibility. The object often takes が: 漢字(かんじ)が書(か)ける.",
+  vol:  "Shows a suggestion or an intention. It is the plain form of 〜ましょう. 〜ようと思(おも)う = \"I plan to\".",
+  ba:   "Shows a condition: if A happens, then B happens. It often shows a general or expected result.",
+  imp:  "A strong, rough order. People use it in emergencies, at sports and on signs. It is not polite.",
+  proh: "A strong, rough \"do not\". People use it in emergencies and on signs. It is not polite.",
+  pass: "The subject receives the action. The person who does the action takes に. With verbs that have no object, it shows that the speaker is troubled (suffering passive).",
+  caus: "One person makes or lets another person do an action. The person who does the action takes に or を.",
+  cp:   "The subject is made to do an action, usually against their wish. The person who gives the order takes に.",
+};
+
+// Conjugation rules shown after each answer, by verb group (1, 2, 3).
+const RULES = {
+  masen:{1:"Change the last う-sound to the い-sound, then add ません.", 2:"Drop る, then add ません.", 3:"する → しません, 来(く)る → 来(き)ません."},
+  mashi:{1:"Change the last う-sound to the い-sound, then add ました.", 2:"Drop る, then add ました.", 3:"する → しました, 来(く)る → 来(き)ました."},
+  msd:  {1:"Change the last う-sound to the い-sound, then add ませんでした.", 2:"Drop る, then add ませんでした.", 3:"する → しませんでした, 来(く)る → 来(き)ませんでした."},
+  dict: {1:"Change the い-sound before ます to the う-sound, then drop ます.", 2:"Drop ます, then add る.", 3:"します → する, 来(き)ます → 来(く)る."},
+  tara: {1:"Make the た form, then add ら.", 2:"Drop る, then add たら.", 3:"する → したら, 来(く)る → 来(き)たら."},
+  masu: {1:"Change the last う-sound to the い-sound, then add ます.", 2:"Drop る, then add ます.", 3:"する → します, 来(く)る → 来(き)ます."},
+  te:   {1:"う・つ・る → って, む・ぶ・ぬ → んで, く → いて, ぐ → いで, す → して. Exception: 行(い)く → 行(い)って.", 2:"Drop る, then add て.", 3:"する → して, 来(く)る → 来(き)て."},
+  nai:  {1:"Change the last う-sound to the あ-sound, then add ない. Verbs that end in う use わ.", 2:"Drop る, then add ない.", 3:"する → しない, 来(く)る → 来(こ)ない."},
+  ta:   {1:"Make the て form, then change て to た (で to だ). Exception: 行(い)く → 行(い)った.", 2:"Drop る, then add た.", 3:"する → した, 来(く)る → 来(き)た."},
+  nakt: {1:"Make the ない form, then change ない to なかった.", 2:"Drop る, then add なかった.", 3:"する → しなかった, 来(く)る → 来(こ)なかった."},
+  pot:  {1:"Change the last う-sound to the え-sound, then add る.", 2:"Drop る, then add られる.", 3:"する → できる, 来(く)る → 来(こ)られる."},
+  vol:  {1:"Change the last う-sound to the お-sound, then add う.", 2:"Drop る, then add よう.", 3:"する → しよう, 来(く)る → 来(こ)よう."},
+  ba:   {1:"Change the last う-sound to the え-sound, then add ば.", 2:"Drop る, then add れば.", 3:"する → すれば, 来(く)る → 来(く)れば."},
+  imp:  {1:"Change the last う-sound to the え-sound.", 2:"Drop る, then add ろ.", 3:"する → しろ, 来(く)る → 来(こ)い."},
+  proh: {1:"Dictionary form + な.", 2:"Dictionary form + な.", 3:"Dictionary form + な."},
+  pass: {1:"Change the last う-sound to the あ-sound, then add れる. Verbs that end in う use わ.", 2:"Drop る, then add られる.", 3:"する → される, 来(く)る → 来(こ)られる."},
+  caus: {1:"Change the last う-sound to the あ-sound, then add せる. Verbs that end in う use わ.", 2:"Drop る, then add させる.", 3:"する → させる, 来(く)る → 来(こ)させる."},
+  cp:   {1:"あ-sound + される (short form). Long form: あ-sound + せられる. Verbs that end in す use only させられる.", 2:"Drop る, then add させられる.", 3:"する → させられる, 来(く)る → 来(こ)させられる."},
+};
+
+// Regular verbs. Forms in CONJ_KEYS order: pot, vol, ba, imp, proh, pass, caus, cp.
+const VERBS = [
+  {d:"書(か)く", en:{b:"write",s:"writes",p:"be written",t:"wrote"},   g:1, f:["書(か)ける","書(か)こう","書(か)けば","書(か)け","書(か)くな","書(か)かれる","書(か)かせる","書(か)かされる","書(か)きます","書(か)いて","書(か)かない","書(か)いた","書(か)かなかった","書(か)きません","書(か)きました","書(か)きませんでした","書(か)く","書(か)いたら"]},
+  {d:"行(い)く", en:{b:"go",s:"goes",p:"someone goes, and it troubles me",t:"went"}, g:1, f:["行(い)ける","行(い)こう","行(い)けば","行(い)け","行(い)くな","行(い)かれる","行(い)かせる","行(い)かされる","行(い)きます","行(い)って","行(い)かない","行(い)った","行(い)かなかった","行(い)きません","行(い)きました","行(い)きませんでした","行(い)く","行(い)ったら"]},
+  {d:"話(はな)す", en:{b:"speak",s:"speaks",p:"be spoken about",t:"spoke"}, g:1, f:["話(はな)せる","話(はな)そう","話(はな)せば","話(はな)せ","話(はな)すな","話(はな)される","話(はな)させる","話(はな)させられる","話(はな)します","話(はな)して","話(はな)さない","話(はな)した","話(はな)さなかった","話(はな)しません","話(はな)しました","話(はな)しませんでした","話(はな)す","話(はな)したら"]},
+  {d:"待(ま)つ", en:{b:"wait",s:"waits",p:"be waited for",t:"waited"},   g:1, f:["待(ま)てる","待(ま)とう","待(ま)てば","待(ま)て","待(ま)つな","待(ま)たれる","待(ま)たせる","待(ま)たされる","待(ま)ちます","待(ま)って","待(ま)たない","待(ま)った","待(ま)たなかった","待(ま)ちません","待(ま)ちました","待(ま)ちませんでした","待(ま)つ","待(ま)ったら"]},
+  {d:"飲(の)む", en:{b:"drink",s:"drinks",p:"be drunk",t:"drank"},   g:1, f:["飲(の)める","飲(の)もう","飲(の)めば","飲(の)め","飲(の)むな","飲(の)まれる","飲(の)ませる","飲(の)まされる","飲(の)みます","飲(の)んで","飲(の)まない","飲(の)んだ","飲(の)まなかった","飲(の)みません","飲(の)みました","飲(の)みませんでした","飲(の)む","飲(の)んだら"]},
+  {d:"買(か)う", en:{b:"buy",s:"buys",p:"be bought",t:"bought"},   g:1, f:["買(か)える","買(か)おう","買(か)えば","買(か)え","買(か)うな","買(か)われる","買(か)わせる","買(か)わされる","買(か)います","買(か)って","買(か)わない","買(か)った","買(か)わなかった","買(か)いません","買(か)いました","買(か)いませんでした","買(か)う","買(か)ったら"]},
+  {d:"帰(かえ)る", en:{b:"go home",s:"goes home",p:"someone goes home, and it troubles me",t:"went home"}, g:1, f:["帰(かえ)れる","帰(かえ)ろう","帰(かえ)れば","帰(かえ)れ","帰(かえ)るな","帰(かえ)られる","帰(かえ)らせる","帰(かえ)らされる","帰(かえ)ります","帰(かえ)って","帰(かえ)らない","帰(かえ)った","帰(かえ)らなかった","帰(かえ)りません","帰(かえ)りました","帰(かえ)りませんでした","帰(かえ)る","帰(かえ)ったら"]},
+  {d:"遊(あそ)ぶ", en:{b:"play",s:"plays",p:"someone plays, and it troubles me",t:"played"}, g:1, f:["遊(あそ)べる","遊(あそ)ぼう","遊(あそ)べば","遊(あそ)べ","遊(あそ)ぶな","遊(あそ)ばれる","遊(あそ)ばせる","遊(あそ)ばされる","遊(あそ)びます","遊(あそ)んで","遊(あそ)ばない","遊(あそ)んだ","遊(あそ)ばなかった","遊(あそ)びません","遊(あそ)びました","遊(あそ)びませんでした","遊(あそ)ぶ","遊(あそ)んだら"]},
+  {d:"泳(およ)ぐ", en:{b:"swim",s:"swims",p:"someone swims, and it troubles me",t:"swam"}, g:1, f:["泳(およ)げる","泳(およ)ごう","泳(およ)げば","泳(およ)げ","泳(およ)ぐな","泳(およ)がれる","泳(およ)がせる","泳(およ)がされる","泳(およ)ぎます","泳(およ)いで","泳(およ)がない","泳(およ)いだ","泳(およ)がなかった","泳(およ)ぎません","泳(およ)ぎました","泳(およ)ぎませんでした","泳(およ)ぐ","泳(およ)いだら"]},
+  {d:"食(た)べる", en:{b:"eat",s:"eats",p:"be eaten",t:"ate"}, g:2, f:["食(た)べられる","食(た)べよう","食(た)べれば","食(た)べろ","食(た)べるな","食(た)べられる","食(た)べさせる","食(た)べさせられる","食(た)べます","食(た)べて","食(た)べない","食(た)べた","食(た)べなかった","食(た)べません","食(た)べました","食(た)べませんでした","食(た)べる","食(た)べたら"]},
+  {d:"見(み)る", en:{b:"see",s:"sees",p:"be seen",t:"saw"},   g:2, f:["見(み)られる","見(み)よう","見(み)れば","見(み)ろ","見(み)るな","見(み)られる","見(み)させる","見(み)させられる","見(み)ます","見(み)て","見(み)ない","見(み)た","見(み)なかった","見(み)ません","見(み)ました","見(み)ませんでした","見(み)る","見(み)たら"]},
+  {d:"起(お)きる", en:{b:"wake up",s:"wakes up",p:"someone wakes up, and it troubles me",t:"woke up"}, g:2, f:["起(お)きられる","起(お)きよう","起(お)きれば","起(お)きろ","起(お)きるな","起(お)きられる","起(お)きさせる","起(お)きさせられる","起(お)きます","起(お)きて","起(お)きない","起(お)きた","起(お)きなかった","起(お)きません","起(お)きました","起(お)きませんでした","起(お)きる","起(お)きたら"]},
+  {d:"する", en:{b:"do",s:"does",p:"be done",t:"did"},       g:3, f:["できる","しよう","すれば","しろ","するな","される","させる","させられる","します","して","しない","した","しなかった","しません","しました","しませんでした","する","したら"]},
+  {d:"来(く)る", en:{b:"come",s:"comes",p:"someone comes, and it troubles me",t:"came"},   g:3, f:["来(こ)られる","来(こ)よう","来(く)れば","来(こ)い","来(く)るな","来(こ)られる","来(こ)させる","来(こ)させられる","来(き)ます","来(き)て","来(こ)ない","来(き)た","来(こ)なかった","来(き)ません","来(き)ました","来(き)ませんでした","来(く)る","来(き)たら"]},
+  // Added verbs. Forms made by a script and checked by hand; the script matched all hand-written verbs above.
+  {d:"読(よ)む", en:{b:"read",s:"reads",p:"be read",t:"read"}, g:1, f:["読(よ)める","読(よ)もう","読(よ)めば","読(よ)め","読(よ)むな","読(よ)まれる","読(よ)ませる","読(よ)まされる","読(よ)みます","読(よ)んで","読(よ)まない","読(よ)んだ","読(よ)まなかった","読(よ)みません","読(よ)みました","読(よ)みませんでした","読(よ)む","読(よ)んだら"]},
+  {d:"聞(き)く", en:{b:"listen",s:"listens",p:"be heard",t:"listened"}, g:1, f:["聞(き)ける","聞(き)こう","聞(き)けば","聞(き)け","聞(き)くな","聞(き)かれる","聞(き)かせる","聞(き)かされる","聞(き)きます","聞(き)いて","聞(き)かない","聞(き)いた","聞(き)かなかった","聞(き)きません","聞(き)きました","聞(き)きませんでした","聞(き)く","聞(き)いたら"]},
+  {d:"作(つく)る", en:{b:"make",s:"makes",p:"be made",t:"made"}, g:1, f:["作(つく)れる","作(つく)ろう","作(つく)れば","作(つく)れ","作(つく)るな","作(つく)られる","作(つく)らせる","作(つく)らされる","作(つく)ります","作(つく)って","作(つく)らない","作(つく)った","作(つく)らなかった","作(つく)りません","作(つく)りました","作(つく)りませんでした","作(つく)る","作(つく)ったら"]},
+  {d:"会(あ)う", en:{b:"meet",s:"meets",p:"be met (by someone)",t:"met"}, g:1, f:["会(あ)える","会(あ)おう","会(あ)えば","会(あ)え","会(あ)うな","会(あ)われる","会(あ)わせる","会(あ)わされる","会(あ)います","会(あ)って","会(あ)わない","会(あ)った","会(あ)わなかった","会(あ)いません","会(あ)いました","会(あ)いませんでした","会(あ)う","会(あ)ったら"]},
+  {d:"立(た)つ", en:{b:"stand",s:"stands",p:"someone stands, and it troubles me",t:"stood"}, g:1, f:["立(た)てる","立(た)とう","立(た)てば","立(た)て","立(た)つな","立(た)たれる","立(た)たせる","立(た)たされる","立(た)ちます","立(た)って","立(た)たない","立(た)った","立(た)たなかった","立(た)ちません","立(た)ちました","立(た)ちませんでした","立(た)つ","立(た)ったら"]},
+  {d:"呼(よ)ぶ", en:{b:"call",s:"calls",p:"be called",t:"called"}, g:1, f:["呼(よ)べる","呼(よ)ぼう","呼(よ)べば","呼(よ)べ","呼(よ)ぶな","呼(よ)ばれる","呼(よ)ばせる","呼(よ)ばされる","呼(よ)びます","呼(よ)んで","呼(よ)ばない","呼(よ)んだ","呼(よ)ばなかった","呼(よ)びません","呼(よ)びました","呼(よ)びませんでした","呼(よ)ぶ","呼(よ)んだら"]},
+  {d:"急(いそ)ぐ", en:{b:"hurry",s:"hurries",p:"someone hurries, and it troubles me",t:"hurried"}, g:1, f:["急(いそ)げる","急(いそ)ごう","急(いそ)げば","急(いそ)げ","急(いそ)ぐな","急(いそ)がれる","急(いそ)がせる","急(いそ)がされる","急(いそ)ぎます","急(いそ)いで","急(いそ)がない","急(いそ)いだ","急(いそ)がなかった","急(いそ)ぎません","急(いそ)ぎました","急(いそ)ぎませんでした","急(いそ)ぐ","急(いそ)いだら"]},
+  {d:"貸(か)す", en:{b:"lend",s:"lends",p:"be lent",t:"lent"}, g:1, f:["貸(か)せる","貸(か)そう","貸(か)せば","貸(か)せ","貸(か)すな","貸(か)される","貸(か)させる","貸(か)させられる","貸(か)します","貸(か)して","貸(か)さない","貸(か)した","貸(か)さなかった","貸(か)しません","貸(か)しました","貸(か)しませんでした","貸(か)す","貸(か)したら"]},
+  {d:"入(はい)る", en:{b:"enter",s:"enters",p:"someone enters, and it troubles me",t:"entered"}, g:1, note:"入(はい)る ends in -iru, but it is a group 1 verb.", f:["入(はい)れる","入(はい)ろう","入(はい)れば","入(はい)れ","入(はい)るな","入(はい)られる","入(はい)らせる","入(はい)らされる","入(はい)ります","入(はい)って","入(はい)らない","入(はい)った","入(はい)らなかった","入(はい)りません","入(はい)りました","入(はい)りませんでした","入(はい)る","入(はい)ったら"]},
+  {d:"走(はし)る", en:{b:"run",s:"runs",p:"someone runs, and it troubles me",t:"ran"}, g:1, note:"走(はし)る ends in -iru, but it is a group 1 verb.", f:["走(はし)れる","走(はし)ろう","走(はし)れば","走(はし)れ","走(はし)るな","走(はし)られる","走(はし)らせる","走(はし)らされる","走(はし)ります","走(はし)って","走(はし)らない","走(はし)った","走(はし)らなかった","走(はし)りません","走(はし)りました","走(はし)りませんでした","走(はし)る","走(はし)ったら"]},
+  {d:"寝(ね)る", en:{b:"sleep",s:"sleeps",p:"someone sleeps, and it troubles me",t:"slept"}, g:2, f:["寝(ね)られる","寝(ね)よう","寝(ね)れば","寝(ね)ろ","寝(ね)るな","寝(ね)られる","寝(ね)させる","寝(ね)させられる","寝(ね)ます","寝(ね)て","寝(ね)ない","寝(ね)た","寝(ね)なかった","寝(ね)ません","寝(ね)ました","寝(ね)ませんでした","寝(ね)る","寝(ね)たら"]},
+  {d:"教(おし)える", en:{b:"teach",s:"teaches",p:"be taught",t:"taught"}, g:2, f:["教(おし)えられる","教(おし)えよう","教(おし)えれば","教(おし)えろ","教(おし)えるな","教(おし)えられる","教(おし)えさせる","教(おし)えさせられる","教(おし)えます","教(おし)えて","教(おし)えない","教(おし)えた","教(おし)えなかった","教(おし)えません","教(おし)えました","教(おし)えませんでした","教(おし)える","教(おし)えたら"]},
+  {d:"着(き)る", en:{b:"wear",s:"wears",p:"be worn",t:"wore"}, g:2, f:["着(き)られる","着(き)よう","着(き)れば","着(き)ろ","着(き)るな","着(き)られる","着(き)させる","着(き)させられる","着(き)ます","着(き)て","着(き)ない","着(き)た","着(き)なかった","着(き)ません","着(き)ました","着(き)ませんでした","着(き)る","着(き)たら"]},
+  {d:"出(で)る", en:{b:"leave",s:"leaves",p:"someone leaves, and it troubles me",t:"left"}, g:2, f:["出(で)られる","出(で)よう","出(で)れば","出(で)ろ","出(で)るな","出(で)られる","出(で)させる","出(で)させられる","出(で)ます","出(で)て","出(で)ない","出(で)た","出(で)なかった","出(で)ません","出(で)ました","出(で)ませんでした","出(で)る","出(で)たら"]},
+  {d:"借(か)りる", en:{b:"borrow",s:"borrows",p:"be borrowed",t:"borrowed"}, g:2, f:["借(か)りられる","借(か)りよう","借(か)りれば","借(か)りろ","借(か)りるな","借(か)りられる","借(か)りさせる","借(か)りさせられる","借(か)ります","借(か)りて","借(か)りない","借(か)りた","借(か)りなかった","借(か)りません","借(か)りました","借(か)りませんでした","借(か)りる","借(か)りたら"]},
+  {d:"勉強(べんきょう)する", en:{b:"study",s:"studies",p:"be studied",t:"studied"}, g:3, note:"Noun + する verbs conjugate like する. 勉強(べんきょう)する → 勉強(べんきょう)できる.", f:["勉強(べんきょう)できる","勉強(べんきょう)しよう","勉強(べんきょう)すれば","勉強(べんきょう)しろ","勉強(べんきょう)するな","勉強(べんきょう)される","勉強(べんきょう)させる","勉強(べんきょう)させられる","勉強(べんきょう)します","勉強(べんきょう)して","勉強(べんきょう)しない","勉強(べんきょう)した","勉強(べんきょう)しなかった","勉強(べんきょう)しません","勉強(べんきょう)しました","勉強(べんきょう)しませんでした","勉強(べんきょう)する","勉強(べんきょう)したら"]},
+  {d:"運転(うんてん)する", en:{b:"drive",s:"drives",p:"be driven",t:"drove"}, g:3, note:"Noun + する verbs conjugate like する. 運転(うんてん)する → 運転(うんてん)できる.", f:["運転(うんてん)できる","運転(うんてん)しよう","運転(うんてん)すれば","運転(うんてん)しろ","運転(うんてん)するな","運転(うんてん)される","運転(うんてん)させる","運転(うんてん)させられる","運転(うんてん)します","運転(うんてん)して","運転(うんてん)しない","運転(うんてん)した","運転(うんてん)しなかった","運転(うんてん)しません","運転(うんてん)しました","運転(うんてん)しませんでした","運転(うんてん)する","運転(うんてん)したら"]},
+  {d:"掃除(そうじ)する", en:{b:"clean",s:"cleans",p:"be cleaned",t:"cleaned"}, g:3, note:"Noun + する verbs conjugate like する. 掃除(そうじ)する → 掃除(そうじ)できる.", f:["掃除(そうじ)できる","掃除(そうじ)しよう","掃除(そうじ)すれば","掃除(そうじ)しろ","掃除(そうじ)するな","掃除(そうじ)される","掃除(そうじ)させる","掃除(そうじ)させられる","掃除(そうじ)します","掃除(そうじ)して","掃除(そうじ)しない","掃除(そうじ)した","掃除(そうじ)しなかった","掃除(そうじ)しません","掃除(そうじ)しました","掃除(そうじ)しませんでした","掃除(そうじ)する","掃除(そうじ)したら"]},
+];
+
+// Special keigo verbs. Every listed form is a correct answer; the first one is shown as "the" answer.
+const KEIGO = [
+  {d:"行(い)く", en:"go",       hon:["いらっしゃる","おいでになる","お越(こ)しになる"], hum:["参(まい)る","伺(うかが)う"]},
+  {d:"来(く)る", en:"come",       hon:["いらっしゃる","お見(み)えになる","お越(こ)しになる","おいでになる"], hum:["参(まい)る"]},
+  {d:"いる", en:"be (for people)",           hon:["いらっしゃる","おいでになる"], hum:["おる"]},
+  {d:"食(た)べる", en:"eat",     hon:["召(め)し上(あ)がる"], hum:["いただく"]},
+  {d:"飲(の)む", en:"drink",       hon:["召(め)し上(あ)がる"], hum:["いただく"]},
+  {d:"言(い)う", en:"say",       hon:["おっしゃる"], hum:["申(もう)す","申(もう)し上(あ)げる"]},
+  {d:"見(み)る", en:"see",       hon:["ご覧(らん)になる"], hum:["拝見(はいけん)する"]},
+  {d:"する", en:"do",           hon:["なさる"], hum:["いたす"]},
+  {d:"知(し)っている", en:"know", hon:["ご存(ぞん)じだ"], hum:["存(ぞん)じている","存(ぞん)じ上(あ)げている"]},
+  {d:"聞(き)く", en:"hear / ask",       hon:["お聞(き)きになる"], hum:["伺(うかが)う","拝聴(はいちょう)する"]},
+  {d:"会(あ)う", en:"meet",       hon:["お会(あ)いになる"], hum:["お目(め)にかかる"]},
+  {d:"あげる", en:"give",         hon:[], hum:["差(さ)し上(あ)げる"]},
+  {d:"もらう", en:"receive",         hon:[], hum:["いただく"]},
+  {d:"くれる", en:"give (to me)",         hon:["くださる"], hum:[]},
+  {d:"寝(ね)る", en:"sleep",       hon:["お休(やす)みになる"], hum:[]},
+  {d:"着(き)る", en:"wear",       hon:["お召(め)しになる"], hum:[]},
+  {d:"思(おも)う", en:"think",     hon:[], hum:["存(ぞん)じる"]},
+];
+// Pool of every keigo form, used for distractors.
+/* Helper patterns. base = the form they attach to (te | stem | dict).
+   v = verbs that make natural sentences with the pattern (null = all verbs).
+   mean = short meaning (also the options in "name the form" mode). ex/exEn = example sentence. */
+const HELPERS = {
+  shimau: {suf:"しまう", base:"te", v:null, mean:"finish completely, or do by mistake (regret)",
+           ex:"財布(さいふ)をなくしてしまいました。", exEn:"I lost my wallet (and I regret it)."},
+  iru:    {suf:"いる", base:"te", v:null, mean:"be doing now, or a state continues",
+           ex:"窓(まど)が開(あ)いています。", exEn:"The window is open."},
+  aru:    {suf:"ある", base:"te", v:["書(か)く","買(か)う","話(はな)す","する","作(つく)る"], mean:"someone did it on purpose, and the result remains",
+           ex:"窓(まど)が開(あ)けてあります。", exEn:"Someone opened the window, and it is still open."},
+  oku:    {suf:"おく", base:"te", v:null, mean:"do in advance, to prepare",
+           ex:"旅行(りょこう)の前(まえ)に切符(きっぷ)を買(か)っておきます。", exEn:"I will buy the tickets before the trip."},
+  miru:   {suf:"みる", base:"te", v:null, mean:"try doing and see the result",
+           ex:"この服(ふく)を着(き)てみます。", exEn:"I will try on this piece of clothing."},
+  teiku:  {suf:"いく", base:"te", v:["書(か)く","飲(の)む","買(か)う","食(た)べる","話(はな)す","帰(かえ)る","泳(およ)ぐ"], mean:"change from now on, or do and then go",
+           ex:"これから寒(さむ)くなっていきます。", exEn:"From now on, it will gradually become colder."},
+  tekuru: {suf:"くる", base:"te", v:["書(か)く","飲(の)む","買(か)う","食(た)べる","話(はな)す","帰(かえ)る","泳(およ)ぐ","見(み)る"], mean:"change up to now, or do and then come back",
+           ex:"コンビニで飲(の)み物(もの)を買(か)ってきます。", exEn:"I will go to the convenience store, buy a drink and come back."},
+  nagara: {suf:"ながら", base:"stem", v:["書(か)く","話(はな)す","飲(の)む","食(た)べる","見(み)る","待(ま)つ","遊(あそ)ぶ","読(よ)む","聞(き)く"], mean:"do two actions at the same time",
+           ex:"音楽(おんがく)を聞(き)きながら勉強(べんきょう)します。", exEn:"I study while I listen to music."},
+  sugiru: {suf:"すぎる", base:"stem", v:["書(か)く","話(はな)す","飲(の)む","買(か)う","遊(あそ)ぶ","泳(およ)ぐ","食(た)べる","見(み)る","する","寝(ね)る","読(よ)む"], mean:"do too much",
+           ex:"昨日(きのう)は食(た)べすぎました。", exEn:"I ate too much yesterday."},
+  yasui:  {suf:"やすい", base:"stem", v:["書(か)く","話(はな)す","飲(の)む","買(か)う","食(た)べる","見(み)る","読(よ)む","着(き)る"], mean:"easy to do",
+           ex:"この本(ほん)は読(よ)みやすいです。", exEn:"This book is easy to read."},
+  nikui:  {suf:"にくい", base:"stem", v:["書(か)く","話(はな)す","飲(の)む","買(か)う","食(た)べる","見(み)る","読(よ)む","着(き)る"], mean:"hard to do",
+           ex:"この字(じ)は読(よ)みにくいです。", exEn:"These characters are hard to read."},
+  niiku:  {suf:"に行(い)く", base:"stem", v:["買(か)う","食(た)べる","飲(の)む","遊(あそ)ぶ","泳(およ)ぐ","見(み)る","借(か)りる"], mean:"go somewhere to do",
+           ex:"デパートへ服(ふく)を買(か)いに行(い)きます。", exEn:"I will go to the department store to buy clothes."},
+  nikuru: {suf:"に来(く)る", base:"stem", v:["買(か)う","食(た)べる","飲(の)む","遊(あそ)ぶ","泳(およ)ぐ","見(み)る"], mean:"come somewhere to do",
+           ex:"友達(ともだち)が遊(あそ)びに来(き)ました。", exEn:"A friend came to visit me."},
+  dasu:   {suf:"出(だ)す", base:"stem", v:["話(はな)す","遊(あそ)ぶ","泳(およ)ぐ","食(た)べる","飲(の)む","走(はし)る"], mean:"suddenly start to do",
+           ex:"急(きゅう)に雨(あめ)が降(ふ)り出(だ)しました。", exEn:"Suddenly it started to rain."},
+  hajime: {suf:"始(はじ)める", base:"stem", v:["書(か)く","話(はな)す","飲(の)む","食(た)べる","見(み)る","遊(あそ)ぶ","泳(およ)ぐ","読(よ)む","作(つく)る","勉強(べんきょう)する"], mean:"start to do",
+           ex:"6時(じ)に晩(ばん)ご飯(はん)を作(つく)り始(はじ)めました。", exEn:"I started to make dinner at 6:00."},
+  owaru:  {suf:"終(お)わる", base:"stem", v:["書(か)く","話(はな)す","飲(の)む","食(た)べる","見(み)る","読(よ)む","作(つく)る"], mean:"finish doing",
+           ex:"この本(ほん)を読(よ)み終(お)わりました。", exEn:"I finished reading this book."},
+  tsumori:{suf:"つもりです", base:"dict", v:null, mean:"intend to do",
+           ex:"来年(らいねん)日本(にほん)へ行(い)くつもりです。", exEn:"I intend to go to Japan next year."},
+  hazu:   {suf:"はずです", base:"dict", v:null, mean:"it is expected to happen",
+           ex:"田中(たなか)さんはもうすぐ来(く)るはずです。", exEn:"Mr. or Ms. Tanaka should arrive soon."},
+  tame:   {suf:"ために", base:"dict", v:null, mean:"in order to do",
+           ex:"車(くるま)を買(か)うために、お金(かね)をためています。", exEn:"I am saving money to buy a car."},
+  kotosuru:{suf:"ことにする", base:"dict", v:null, mean:"decide to do",
+           ex:"毎朝(まいあさ)走(はし)ることにしました。", exEn:"I decided to run every morning."},
+  kotonaru:{suf:"ことになる", base:"dict", v:null, mean:"it is decided (not by the speaker)",
+           ex:"来月(らいげつ)大阪(おおさか)へ転勤(てんきん)することになりました。", exEn:"It was decided that I will transfer to Osaka next month."},
+};
+const BASE_NAME = {te:"て form", stem:"ます stem (ます form without ます)", dict:"dictionary form"};
+// Wrong bases for each correct base. The て form is not a wrong base for stem patterns,
+// because て + verb can be a valid sequence (話して、終わる).
+// Chosen so that every wrong combination is ungrammatical.
+const WRONG_BASES = {te:["dict","stem","ta"], stem:["dict","nai","ta"], dict:["stem","te","masu"]};
+// Add helper entries to FORMS so they appear in the setup menu.
+for (const [k,h] of Object.entries(HELPERS)) FORMS["h_"+k] = {en:"〜"+(h.base==="te"?"て":"")+h.suf, jp:"", kind:"helper", book:"h", hk:k};
+
+const KEIGO_POOL = [...new Set(KEIGO.flatMap(k => [...k.hon, ...k.hum]))];
+// Forms that are honorific for some verb AND humble for another would make "name the type" ambiguous.
+const HON_SET = new Set(KEIGO.flatMap(k => k.hon));
+const HUM_SET = new Set(KEIGO.flatMap(k => k.hum));
+
+/* =====================================================================
+   HELPERS
+   ===================================================================== */
+// Convert "書(か)く" notation to ruby HTML. Kanji run + (reading).
+const ruby = s => s.replace(/([\u4e00-\u9faf\u3005]+)\(([^)]+)\)/g, "<ruby>$1<rt>$2</rt></ruby>");
+// Plain text (kanji only) for equality checks between forms.
+const plain = s => s.replace(/\(([^)]+)\)/g, "");
+const shuffle = a => { for (let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; };
+const pick = a => a[Math.floor(Math.random()*a.length)];
+const $ = id => document.getElementById(id);
+const formLabel = k => FORMS[k].jp ? `${FORMS[k].en} ${ruby(FORMS[k].jp)}` : FORMS[k].en;
+
+// Safe localStorage wrappers (storage can be blocked or empty).
+const store = {
+  get(k){ try { return JSON.parse(localStorage.getItem(k)); } catch(e){ return null; } },
+  set(k,v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} },
+};
+
+// English meaning of a regular form for one verb.
+function gloss(v, fk){
+  const {b,s,p,t} = v.en, B = b[0].toUpperCase()+b.slice(1);
+  return {pot:`can ${b}`, vol:`let's ${b} / I will ${b}`, ba:`if (someone) ${s}`, imp:`${B}! (order)`,
+          proh:`Do not ${b}! (order)`, pass:p, caus:`make or let (someone) ${b}`, cp:`be made to ${b}`,
+          masu:`${b} / will ${b} (polite)`, te:`${b}, and then... (connecting form)`,
+          nai:`do not ${b}`, ta:t, nakt:`did not ${b}`,
+          masen:`do not ${b} (polite)`, mashi:`${t} (polite)`, msd:`did not ${b} (polite)`,
+          dict:`${b} (plain)`, tara:`if (someone) ${s} / when that is done`}[fk];
+}
+// Meaning card HTML for a regular form.
+const meanConj = (v, fk) => `<b>Meaning:</b> "${gloss(v,fk)}". ${ruby(USES[fk])}`;
+// Meaning card HTML for a keigo verb. ens = English meaning(s) of the plain verb(s).
+const meanKeigo = (ens, fk) => fk === "hon"
+  ? `<b>Meaning:</b> a respectful way to say "${ens}". Use it when a teacher, customer or superior does the action.`
+  : `<b>Meaning:</b> a modest way to say "${ens}". Use it when you or your group do the action.`;
+
+/* =====================================================================
+   SETTINGS
+   ===================================================================== */
+const saved = store.get("vq-settings") || {};
+const settings = {
+  forms: new Set((saved.forms || Object.keys(FORMS)).filter(k => k in FORMS)),
+  count: saved.count || 10,
+  furi: saved.furi !== false,
+};
+const COUNTS = [10,20,30];
+
+// Build a chip; onClick toggles or selects.
+function chip(html, pressed, onClick){
+  const b = document.createElement("button");
+  b.type = "button"; b.className = "chip"; b.innerHTML = html;
+  b.setAttribute("aria-pressed", pressed ? "true" : "false");
+  b.addEventListener("click", onClick);
+  return b;
+}
+function renderSetup(){
+  // Book chips: pressed when every form of that book is selected; click toggles the whole book.
+  const bc = $("bookChips"); bc.innerHTML = "";
+  for (const b of BOOKS){
+    const keys = Object.keys(FORMS).filter(k => FORMS[k].book === b);
+    const full = keys.every(k => settings.forms.has(k));
+    bc.appendChild(chip(`Daichi ${b} (大地(だいち)${b})`, full, () => {
+      keys.forEach(k => full ? settings.forms.delete(k) : settings.forms.add(k)); renderSetup();
+    }));
+  }
+  // "Include helper stems" toggle: selects or clears every helper pattern.
+  const hKeys = Object.keys(FORMS).filter(k => FORMS[k].kind === "helper");
+  const hFull = hKeys.every(k => settings.forms.has(k));
+  const hc = $("helperChip"); hc.innerHTML = "";
+  hc.appendChild(chip("Include helper stems (〜ている, 〜ながら, 〜つもり …)", hFull, () => {
+    hKeys.forEach(k => hFull ? settings.forms.delete(k) : settings.forms.add(k)); renderSetup();
+  }));
+  // Helper chips, listed by the base form they attach to.
+  for (const b of ["te","stem","dict"]){
+    const box = $("helpChips_"+b); box.innerHTML = "";
+    for (const k of hKeys.filter(k => HELPERS[FORMS[k].hk].base === b)){
+      box.appendChild(chip(ruby(FORMS[k].en), settings.forms.has(k), () => {
+        settings.forms.has(k) ? settings.forms.delete(k) : settings.forms.add(k); renderSetup();
+      }));
+    }
+  }
+  $("selCount").textContent = `(${settings.forms.size} of ${Object.keys(FORMS).length} selected)`;
+  // Individual form chips, listed under their book.
+  for (const b of BOOKS){
+    const fc = $("formChips"+b); fc.innerHTML = "";
+    for (const k of Object.keys(FORMS).filter(k => FORMS[k].book === b)){
+      fc.appendChild(chip(formLabel(k), settings.forms.has(k), () => {
+        settings.forms.has(k) ? settings.forms.delete(k) : settings.forms.add(k); renderSetup();
+      }));
+    }
+  }
+  const all = settings.forms.size === Object.keys(FORMS).length;
+  $("allForms").textContent = all ? "Clear all" : "Select all";
+  const cc = $("countChips"); cc.innerHTML = "";
+  for (const n of COUNTS) cc.appendChild(chip(String(n), settings.count===n, () => { settings.count=n; renderSetup(); }));
+  $("furiToggle").setAttribute("aria-pressed", settings.furi ? "true" : "false");
+  document.body.classList.toggle("no-furi", !settings.furi);
+  $("setupWarn").textContent = "";
+  const best = store.get("vq-best");
+  $("bestLine").textContent = best ? `Best score: ${best.pct}% (${best.score}/${best.total})` : "";
+  store.set("vq-settings", {forms:[...settings.forms], count:settings.count, furi:settings.furi});
+}
+$("allForms").addEventListener("click", () => {
+  const all = settings.forms.size === Object.keys(FORMS).length;
+  settings.forms = new Set(all ? [] : Object.keys(FORMS)); renderSetup();
+});
+$("furiToggle").addEventListener("click", () => { settings.furi = !settings.furi; renderSetup(); });
+
+/* =====================================================================
+   QUESTION GENERATION
+   Each question: {verbHtml, taskHtml, options:[{html, correct}], ruleHtml, answerHtml}
+   ===================================================================== */
+
+// Make mode, regular forms: show dictionary form, pick the target form.
+function qMakeConj(fk){
+  const v = pick(VERBS), i = CONJ_KEYS.indexOf(fk), ans = v.f[i];
+  // Start form: the dictionary form, except for the dictionary-form question (start from ます form).
+  const from = fk === "dict" ? v.f[CONJ_KEYS.indexOf("masu")] : v.d;
+  // Distractors: other forms of the same verb, same book, whose text differs from the answer.
+  const sameBook = v.f.filter((x, j) => FORMS[CONJ_KEYS[j]].book === FORMS[fk].book);
+  const others = shuffle([...new Set(sameBook.filter(x => plain(x) !== plain(ans)))]).slice(0,3);
+  return {
+    verbHtml: ruby(from),
+    taskHtml: `Make the <b>${formLabel(fk)}</b>`,
+    options: shuffle([{html:ruby(ans), correct:true}, ...others.map(o => ({html:ruby(o), correct:false}))]),
+    answerHtml: `${ruby(from)} → ${ruby(ans)}`,
+    meaningHtml: meanConj(v, fk),
+    ruleHtml: `Group ${v.g}: ${ruby(RULES[fk][v.g])}` + (v.note ? `<br>Note: ${ruby(v.note)}` : ""),
+  };
+}
+
+// Name mode, regular forms: show a conjugated form, pick its form name.
+// Skip forms that look the same as another form of the verb (例: 食べられる = potential and passive).
+function qNameConj(fk){
+  const i = CONJ_KEYS.indexOf(fk);
+  const ok = VERBS.filter(v => v.f.filter(x => plain(x) === plain(v.f[i])).length === 1);
+  const v = pick(ok), ans = v.f[i];
+  // Wrong options: other form names from the same book.
+  const wrong = shuffle(CONJ_KEYS.filter(k => k !== fk && FORMS[k].book === FORMS[fk].book)).slice(0,3);
+  return {
+    verbHtml: ruby(ans),
+    // For the dictionary form, name the ます form as the source so the question is not trivial.
+    taskHtml: `From ${ruby(fk === "dict" ? v.f[CONJ_KEYS.indexOf("masu")] : v.d)}. Which form is this?`,
+    options: shuffle([{html:formLabel(fk), correct:true}, ...wrong.map(k => ({html:formLabel(k), correct:false}))]),
+    answerHtml: `${ruby(ans)} is the ${formLabel(fk)} of ${ruby(v.d)}`,
+    meaningHtml: meanConj(v, fk),
+    ruleHtml: `Group ${v.g}: ${ruby(RULES[fk][v.g])}` + (v.note ? `<br>Note: ${ruby(v.note)}` : ""),
+  };
+}
+
+// Make mode, keigo: show plain verb, pick the special honorific or humble verb.
+function qMakeKeigo(fk){
+  const v = pick(KEIGO.filter(k => k[fk].length));
+  const valid = new Set([...v.hon, ...v.hum].filter(x => v[fk].includes(x)));
+  // Distractors may include the other type of the same verb — this tests hon/hum confusion.
+  const pool = KEIGO_POOL.filter(x => !valid.has(x));
+  const sameVerbOther = (fk === "hon" ? v.hum : v.hon).filter(x => !valid.has(x));
+  const distract = [...new Set([...shuffle(sameVerbOther).slice(0,1), ...shuffle(pool)])].slice(0,3);
+  const ans = pick(v[fk]);
+  const all = v[fk].map(ruby).join(" / ");
+  return {
+    verbHtml: ruby(v.d),
+    taskHtml: `Select the <b>${formLabel(fk)}</b> verb`,
+    options: shuffle([{html:ruby(ans), correct:true}, ...distract.map(o => ({html:ruby(o), correct:false}))]),
+    answerHtml: `${ruby(v.d)} → ${ruby(ans)}`,
+    meaningHtml: meanKeigo(v.en, fk),
+    ruleHtml: `All correct ${FORMS[fk].en.toLowerCase()} forms of ${ruby(v.d)}: ${all}. ` +
+      (fk === "hon" ? "Use honorific verbs for the actions of other people." : "Use humble verbs for your own actions."),
+  };
+}
+
+// Name mode, keigo: show a special verb, choose honorific or humble.
+// Only use forms that belong to exactly one type.
+function qNameKeigo(fk){
+  const src = fk === "hon" ? HON_SET : HUM_SET, other = fk === "hon" ? HUM_SET : HON_SET;
+  const form = pick([...src].filter(x => !other.has(x)));
+  const src2 = KEIGO.filter(k => k[fk].includes(form));
+  const verbs = src2.map(k => ruby(k.d)).join(", ");
+  const ens = src2.map(k => k.en).join(", ");
+  const otherKey = fk === "hon" ? "hum" : "hon";
+  return {
+    verbHtml: ruby(form),
+    taskHtml: "Is this verb honorific or humble?",
+    options: shuffle([{html:formLabel(fk), correct:true}, {html:formLabel(otherKey), correct:false}]),
+    answerHtml: `${ruby(form)} is ${FORMS[fk].en.toLowerCase()} (${ruby(FORMS[fk].jp)})`,
+    meaningHtml: meanKeigo(ens, fk),
+    ruleHtml: `Plain verb: ${verbs}.`,
+  };
+}
+
+// Base form of a verb for a helper pattern.
+function baseOf(v, b){
+  const masu = v.f[CONJ_KEYS.indexOf("masu")];
+  return {te:v.f[CONJ_KEYS.indexOf("te")], stem:masu.slice(0,-2), dict:v.d,
+          ta:v.f[CONJ_KEYS.indexOf("ta")], nai:v.f[CONJ_KEYS.indexOf("nai")], masu}[b];
+}
+const verbsFor = h => h.v ? VERBS.filter(v => h.v.includes(v.d)) : VERBS;
+const helperMeaning = h => `<b>Meaning:</b> ${h.mean}.<br>Example: ${ruby(h.ex)} "${h.exEn}"`;
+const helperRule = (h, v) => `Attach ${ruby(h.suf)} to the ${BASE_NAME[h.base]}: ${ruby(baseOf(v,h.base))} + ${ruby(h.suf)}.`;
+
+// Make mode: show verb + pattern, select the correct combination.
+function qMakeHelper(fk){
+  const h = HELPERS[FORMS[fk].hk], v = pick(verbsFor(h));
+  const ans = baseOf(v, h.base) + h.suf;
+  const wrong = WRONG_BASES[h.base].map(b => baseOf(v, b) + h.suf);
+  return {
+    verbHtml: ruby(v.d),
+    taskHtml: `Add <b>${FORMS[fk].en}</b>`,
+    options: shuffle([{html:ruby(ans), correct:true}, ...wrong.map(w => ({html:ruby(w), correct:false}))]),
+    answerHtml: `${ruby(v.d)} → ${ruby(ans)}`,
+    meaningHtml: helperMeaning(h),
+    ruleHtml: helperRule(h, v),
+  };
+}
+// Build a full question list from the settings.
+function buildQuiz(){
+  const keys = [...settings.forms], qs = [];
+  for (let n=0; n<settings.count; n++){
+    const fk = keys[n % keys.length];  // spread forms evenly
+    const kind = FORMS[fk].kind;
+    // Helper stems use only "make the form": the pattern in the prompt would give away the meaning.
+    const mode = kind === "helper" ? "make" : pick(["make","name"]);  // always mixed
+    const make = {conj:qMakeConj, keigo:qMakeKeigo, helper:qMakeHelper}[kind];
+    const name = {conj:qNameConj, keigo:qNameKeigo}[kind];
+    qs.push(mode === "make" ? make(fk) : name(fk));
+  }
+  return shuffle(qs);
+}
+
+/* =====================================================================
+   QUIZ FLOW
+   ===================================================================== */
+let quiz = [], idx = 0, score = 0, misses = [], answered = false;
+
+function show(id){ for (const s of ["setup","quiz","results"]) $(s).classList.toggle("hidden", s !== id); window.scrollTo(0,0); }
+
+function start(){
+  if (!settings.forms.size){ $("setupWarn").textContent = "Select one or more forms."; return; }
+  quiz = buildQuiz(); idx = 0; score = 0; misses = [];
+  show("quiz"); renderQ();
+}
+
+function renderQ(){
+  const q = quiz[idx]; answered = false;
+  $("qCount").textContent = `Question ${idx+1} of ${quiz.length}`;
+  $("qScore").textContent = `Score ${score}`;
+  $("bar").style.width = `${(idx/quiz.length)*100}%`;
+  $("pVerb").innerHTML = q.verbHtml;
+  $("pTask").innerHTML = q.taskHtml;
+  $("fb").innerHTML = ""; $("nextBtn").classList.add("hidden");
+  const box = $("opts"); box.innerHTML = "";
+  q.options.forEach((o, i) => {
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "opt";
+    b.innerHTML = `<span class="k">${i+1}</span><span>${o.html}</span>`;
+    b.addEventListener("click", () => choose(i));
+    box.appendChild(b);
+  });
+  box.firstChild.focus({preventScroll:true});
+}
+
+function choose(i){
+  if (answered) return; answered = true;
+  const q = quiz[idx], btns = [...$("opts").children];
+  q.options.forEach((o, j) => {
+    btns[j].disabled = true;
+    if (o.correct) btns[j].classList.add("ok");
+    else if (j === i) btns[j].classList.add("bad");
+  });
+  const right = q.options[i].correct;
+  if (right) score++; else misses.push(q);
+  $("qScore").textContent = `Score ${score}`;
+  $("fb").innerHTML = `<div class="feedback ${right?"ok":"bad"}">
+      <div class="verdict">${right ? "Correct" : "Incorrect"}</div>
+      <div class="rule">${q.answerHtml}</div>
+      <div class="rule">${q.meaningHtml}</div>
+      <div class="rule"><b>Rule:</b> ${q.ruleHtml}</div></div>`;
+  const nb = $("nextBtn");
+  nb.textContent = idx === quiz.length-1 ? "Show results" : "Next question";
+  nb.classList.remove("hidden"); nb.focus({preventScroll:true});
+}
+
+function next(){ idx++; idx < quiz.length ? renderQ() : finish(); }
+
+function finish(){
+  $("bar").style.width = "100%";
+  const pct = Math.round(score/quiz.length*100);
+  $("rScore").textContent = `${score} / ${quiz.length}`;
+  const best = store.get("vq-best");
+  const isBest = !best || pct > best.pct;
+  if (isBest) store.set("vq-best", {pct, score, total:quiz.length});
+  $("rLine").textContent = `${pct}%` + (isBest ? ". New best score." : `. Best score: ${best.pct}%.`);
+  $("rMisses").innerHTML = misses.length
+    ? `<h2>Questions to study</h2>` + misses.map(q => `<div class="miss">${q.answerHtml}<div class="m">${q.meaningHtml}</div><div class="m">${q.ruleHtml}</div></div>`).join("")
+    : `<p class="sub" style="text-align:center;margin-top:1rem">You answered all questions correctly.</p>`;
+  show("results");
+}
+
+/* Keyboard: 1–4 select an option, Enter goes to the next question. */
+document.addEventListener("keydown", e => {
+  if ($("quiz").classList.contains("hidden")) return;
+  const n = parseInt(e.key, 10);
+  if (!answered && n >= 1 && n <= quiz[idx].options.length){ e.preventDefault(); choose(n-1); }
+  else if (answered && e.key === "Enter" && document.activeElement !== $("nextBtn")){ e.preventDefault(); next(); }
+});
+
+$("startBtn").addEventListener("click", start);
+$("nextBtn").addEventListener("click", next);
+$("quitBtn").addEventListener("click", () => { show("setup"); renderSetup(); });
+$("againBtn").addEventListener("click", start);
+$("setupBtn").addEventListener("click", () => { show("setup"); renderSetup(); });
+
+renderSetup();
+</script>
+</body>
+</html>

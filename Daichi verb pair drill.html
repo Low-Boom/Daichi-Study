@@ -901,7 +901,9 @@ function spread(a){
   return a;
 }
 
-function show(id){ for (const s of ["setup","quiz","results","browse"]) $(s).classList.toggle("hidden", s !== id); window.scrollTo(0,0); }
+// Stop any word that is still playing when the content it belongs to goes away.
+const hush = () => { if (TTS) speechSynthesis.cancel(); };
+function show(id){ hush(); for (const s of ["setup","quiz","results","browse"]) $(s).classList.toggle("hidden", s !== id); window.scrollTo(0,0); }
 
 function start(){
   if (!settings.groups.size){ $("setupWarn").textContent = "Select one or more groups."; return; }
@@ -913,6 +915,7 @@ function start(){
 
 const scored = () => log.filter(x => x.first);
 function render(){
+  hush();
   const it = queue[idx]; answered = false;
   const total = queue.filter(x => !x.intro).length, done = queue.slice(0, idx).filter(x => !x.intro).length;
   $("qCount").textContent = it.intro ? "New pair" : `Question ${done+1} of ${total}`;

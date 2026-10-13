@@ -133,6 +133,14 @@ details.more li{margin:.35rem 0; font-size:.95rem}
 table.by{width:100%; border-collapse:collapse; margin-top:.5rem; background:var(--card); border-radius:.6rem; overflow:hidden}
 table.by th, table.by td{padding:.45rem .6rem; text-align:left; border-bottom:1px solid var(--line); font-size:.92rem}
 .search{width:100%; font:inherit; padding:.6rem .8rem; border:1.5px solid var(--line); border-radius:.6rem; background:var(--card); color:var(--ink)}
+/* Speaker button (read aloud). 30px target, icon uses currentColor so it follows the theme. */
+.say{display:inline-flex; align-items:center; justify-content:center; width:1.9rem; height:1.9rem; padding:0; margin-left:.35rem;
+  border:1.5px solid var(--line); border-radius:50%; background:var(--card); color:var(--indigo); cursor:pointer; vertical-align:middle; flex:none}
+.say svg{width:1rem; height:1rem}
+.say.on{background:var(--indigo); color:var(--card); border-color:var(--indigo)}
+.prompt .say{width:2.3rem; height:2.3rem}
+.optrow{display:flex; gap:.4rem; align-items:center}
+.optrow .opt{flex:1; min-width:0}
 @media (max-width:30rem){ .pair .pc{grid-template-columns:1fr} .opts.two{grid-template-columns:1fr} }
 @media (prefers-reduced-motion:reduce){.progress>i{transition:none}}
 </style>
@@ -171,7 +179,9 @@ table.by th, table.by td{padding:.45rem .6rem; text-align:left; border-bottom:1p
   <p class="sub" style="margin-top:.35rem">"Type" applies to partner and reading questions. You can type hiragana or rōmaji (for example <i>agaru</i>).</p>
 
   <h2>Display</h2>
-  <div class="chips"><button class="chip" id="furiToggle" type="button" aria-pressed="false">Furigana in questions</button></div>
+  <div class="chips"><button class="chip" id="furiToggle" type="button" aria-pressed="false">Furigana in questions</button>
+    <button class="chip" id="sayToggle" type="button" aria-pressed="true">Read-aloud buttons</button></div>
+  <p class="sub" id="sayNote" style="margin-top:.35rem">Speaker buttons read the word in Japanese. Kanji and reading questions have no speaker buttons, because the sound gives the answer. The buttons show again after you answer.</p>
 
   <p class="warn" id="setupWarn" role="alert"></p>
   <button class="btn" id="startBtn" type="button">Start session</button>
@@ -492,6 +502,36 @@ function romaToHira(s){
 }
 const toKana = s => /[a-z]/i.test(s) ? romaToHira(norm(s)) : norm(s);
 
+/* Read aloud with the browser speech engine (Web Speech API, no network files).
+   We always speak the kana reading, not the kanji, so the engine cannot pick a
+   wrong reading (開く → ひらく instead of あく). A Japanese voice is used when the
+   device has one; otherwise lang="ja-JP" lets the engine choose. */
+const TTS = "speechSynthesis" in window && "SpeechSynthesisUtterance" in window;
+let jaVoice = null;
+function pickVoice(){
+  const vs = speechSynthesis.getVoices();
+  jaVoice = vs.find(v => /^ja[-_]JP$/i.test(v.lang) && v.localService) || vs.find(v => /^ja/i.test(v.lang)) || null;
+}
+if (TTS){ pickVoice(); if (speechSynthesis.addEventListener) speechSynthesis.addEventListener("voiceschanged", pickVoice); }
+function say(text, btn){
+  if (!TTS || !text) return;
+  speechSynthesis.cancel();                    // stop the word that is playing, if any
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = "ja-JP"; u.rate = 0.9; if (jaVoice) u.voice = jaVoice;
+  if (btn){ btn.classList.add("on"); u.onend = u.onerror = () => btn.classList.remove("on"); }
+  speechSynthesis.speak(u);
+}
+const SPK = `<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4z" fill="currentColor"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/></svg>`;
+// Speaker button HTML. text = kana to speak; label = what the button names for screen readers.
+// Empty when the browser has no speech engine or the setting is off.
+const sayBtn = (text, label) => TTS && settings.speak
+  ? `<button type="button" class="say" data-say="${esc(text)}" aria-label="Read aloud: ${esc(label)}" title="Read aloud">${SPK}</button>` : "";
+// One click handler for every speaker button on the page (they are created with innerHTML).
+document.addEventListener("click", e => {
+  const b = e.target.closest && e.target.closest(".say");
+  if (b){ e.preventDefault(); e.stopPropagation(); say(b.dataset.say, b); }
+});
+
 // Kana grid for sound changes. Column 9 is the w-column (わ い う え お):
 // う and え map there, so そろう → そろわ/そろえ and 植える → 植わる work.
 const ROWK = {a:"あかさたなはまやらわがざだばぱ", i:"いきしちにひみいりいぎじぢびぴ", u:"うくすつぬふむゆるうぐずづぶぷ",
@@ -641,7 +681,7 @@ function qPair(p){
   const answers = VERBS.filter(u => u.side === to && valid.includes(u.f)).flatMap(u => [u.f, u.r]);
   return {
     skill:"Partner",
-    html:`<div class="verb jp-display">${vHtml(v, settings.furi)}</div>
+    html:`<div class="verb jp-display">${vHtml(v, settings.furi)}${sayBtn(v.r, v.f)}</div>
           <div class="task">${v.side === "i" ? "自動詞" : "他動詞"}. Give its <b>${SIDE[to]}</b> partner.</div>`,
     opts: mkOpts(valid[0], wrong, f => `<span class="jp-display">${f}</span>`),
     typed:{answers},
@@ -656,7 +696,8 @@ function qUse(p){
     skill:"が / を", two:true,
     html:`<div class="verb jp-display" style="font-size:clamp(1.5rem,7vw,2.1rem)">${rubyMark(frame, settings.furi)}<span class="blank" aria-label="blank"></span></div>
           <div class="task">Which verb completes the phrase?</div>`,
-    opts: mkOpts(v.f, [other(v).f], f => `<span class="jp-display">${vHtml(VERBS.find(u => u.f === f && u.pair === p), settings.furi)}</span>`, 1),
+    opts: mkOpts(v.f, [other(v).f], f => `<span class="jp-display">${vHtml(VERBS.find(u => u.f === f && u.pair === p), settings.furi)}</span>`, 1)
+            .map(o => ({...o, say: VERBS.find(u => u.f === o.val && u.pair === p).r})),
     typed:null,
     answerHtml:`${rubyMark(frame, true)}${vHtml(v, true)}`,
   };
@@ -674,7 +715,7 @@ function qMeaning(p){
     const wrong = uniq(cand.map(u => u.en)).filter(en => !VERBS.some(u => u.f === v.f && u.en === en));
     return {
       skill:"Meaning",
-      html:`<div class="verb jp-display">${vHtml(v, settings.furi)}</div><div class="task">What does it mean?</div>`,
+      html:`<div class="verb jp-display">${vHtml(v, settings.furi)}${sayBtn(v.r, v.f)}</div><div class="task">What does it mean?</div>`,
       opts: mkOpts(v.en, wrong, en => esc(en)).map(x => ({...x, en:true})),
       typed:null, answerHtml:`${vHtml(v, true)} = ${esc(v.en)}`,
     };
@@ -683,7 +724,8 @@ function qMeaning(p){
   return {
     skill:"Meaning",
     html:`<div class="verb en">${esc(v.en)}</div><div class="task">Which verb has this meaning?</div>`,
-    opts: mkOpts(v.f, wrong, f => `<span class="jp-display">${vHtml(VERBS.find(u => u.f === f), settings.furi)}</span>`),
+    opts: mkOpts(v.f, wrong, f => `<span class="jp-display">${vHtml(VERBS.find(u => u.f === f), settings.furi)}</span>`)
+            .map(o => ({...o, say: VERBS.find(u => u.f === o.val).r})),
     typed:null, answerHtml:`${esc(v.en)} = ${vHtml(v, true)}`,
   };
 }
@@ -729,9 +771,9 @@ const MAKERS = {pair:qPair, use:qUse, meaning:qMeaning, kanji:qKanji, reading:qR
 function pairCard(p, tag=""){
   const side = (v, frame) => `<div class="side ${v.side}">
       <div class="lab">${v.side === "i" ? "自 intransitive" : "他 transitive"}</div>
-      <div class="vf jp-display">${vHtml(v, true)}</div>
+      <div class="vf jp-display">${vHtml(v, true)}${sayBtn(v.r, v.f)}</div>
       <div class="en">${esc(v.en)}</div>
-      <div class="fr jp-display">${rubyMark(frame, true).replace(/([がをに])$/, '<span class="pt">$1</span>')}${vHtml(v, true)}</div>
+      <div class="fr jp-display">${rubyMark(frame, true).replace(/([がをに])$/, '<span class="pt">$1</span>')}${vHtml(v, true)}${sayBtn(markKana(frame) + v.r, frame.replace(/\{([^|}]+)\|[^}]+\}/g, "$1") + v.f)}</div>
     </div>`;
   const star = p.star === 1 ? " · same form for 自 and 他" : p.star === 2 ? " · the meanings are different" : "";
   const others = [p.i, p.t].flatMap(v => partnersOf(other(v)).filter(f => f !== v.f).map(f => `${other(v).f} also pairs with ${f}.`));
@@ -752,6 +794,7 @@ const settings = {
   fresh: saved.fresh ?? 5,
   mode: saved.mode || "choose",
   furi: !!saved.furi,              // default off: questions test the reading; feedback always shows it
+  speak: saved.speak !== false,    // read-aloud buttons, default on
 };
 const saveSettings = () => store.set("vp-settings", {...settings, groups:[...settings.groups], facets:[...settings.facets]});
 
@@ -799,6 +842,9 @@ function renderSetup(){
   one("newChips", [0, 3, 5, 8, 12], "fresh");
   one("modeChips", ["choose", "type"], "mode", m => m === "choose" ? "Choose" : "Type");
   $("furiToggle").setAttribute("aria-pressed", settings.furi ? "true" : "false");
+  $("sayToggle").setAttribute("aria-pressed", TTS && settings.speak ? "true" : "false");
+  $("sayToggle").disabled = !TTS;
+  if (!TTS) $("sayNote").textContent = "This browser cannot read text aloud, so there are no speaker buttons.";
   const sel = PAIRS.filter(p => settings.groups.has(p.g));
   $("sDue").textContent = dueCards().length;
   $("sSeen").textContent = `${sel.filter(p => prog.intro[p.id]).length}/${sel.length}`;
@@ -807,6 +853,7 @@ function renderSetup(){
   saveSettings();
 }
 $("furiToggle").addEventListener("click", () => { settings.furi = !settings.furi; renderSetup(); });
+$("sayToggle").addEventListener("click", () => { settings.speak = !settings.speak; renderSetup(); });
 $("resetBtn").addEventListener("click", () => {
   if (!confirm("Delete all progress for this drill? This cannot be undone.")) return;
   prog.cards = {}; prog.intro = {}; saveProg(); renderSetup();
@@ -854,7 +901,9 @@ function spread(a){
   return a;
 }
 
-function show(id){ for (const s of ["setup","quiz","results","browse"]) $(s).classList.toggle("hidden", s !== id); window.scrollTo(0,0); }
+// Stop any word that is still playing when the content it belongs to goes away.
+const hush = () => { if (TTS) speechSynthesis.cancel(); };
+function show(id){ hush(); for (const s of ["setup","quiz","results","browse"]) $(s).classList.toggle("hidden", s !== id); window.scrollTo(0,0); }
 
 function start(){
   if (!settings.groups.size){ $("setupWarn").textContent = "Select one or more groups."; return; }
@@ -866,6 +915,7 @@ function start(){
 
 const scored = () => log.filter(x => x.first);
 function render(){
+  hush();
   const it = queue[idx]; answered = false;
   const total = queue.filter(x => !x.intro).length, done = queue.slice(0, idx).filter(x => !x.intro).length;
   $("qCount").textContent = it.intro ? "New pair" : `Question ${done+1} of ${total}`;
@@ -876,7 +926,7 @@ function render(){
   if (it.intro){
     // Study card for a new pair. It starts the review schedule for this pair.
     prog.intro[it.p.id] = Date.now(); saveProg();
-    $("qBody").innerHTML = `<p class="sub">Read the pair aloud. Note the pattern, the kanji and the particle. Questions follow.</p>`
+    $("qBody").innerHTML = `<p class="sub">Read the pair aloud${TTS && settings.speak ? " (or press the speaker buttons)" : ""}. Note the pattern, the kanji and the particle. Questions follow.</p>`
       + pairCard(it.p, `<span class="intro-tag">NEW</span> `);
     nb.textContent = "Start questions"; nb.classList.remove("hidden"); nb.focus({preventScroll:true});
     answered = true; return;
@@ -892,8 +942,11 @@ function render(){
         <button class="btn" type="submit">Check</button></form>
       <p class="typed-help">Hiragana, kanji or rōmaji. <button class="chip" id="idk" type="button" style="padding:.15rem .6rem">I don't know</button></p>`;
   } else {
-    body += `<div class="opts${cur.two ? " two" : ""}" id="opts">` + cur.opts.map((o, i) =>
-      `<button type="button" class="opt${o.en ? " en" : ""}" data-i="${i}"><span class="k">${i+1}</span><span>${o.html}</span></button>`).join("") + `</div>`;
+    body += `<div class="opts${cur.two ? " two" : ""}" id="opts">` + cur.opts.map((o, i) => {
+      const btn = `<button type="button" class="opt${o.en ? " en" : ""}" data-i="${i}"><span class="k">${i+1}</span><span>${o.html}</span></button>`;
+      const spk = o.say ? sayBtn(o.say, o.val) : "";
+      return spk ? `<div class="optrow">${btn}${spk}</div>` : btn;    // speaker sits beside, not inside, the option
+    }).join("") + `</div>`;
   }
   $("qBody").innerHTML = body;
   if (typing){
@@ -902,13 +955,13 @@ function render(){
     $("tIn").focus({preventScroll:true});
   } else {
     $("opts").querySelectorAll(".opt").forEach(b => b.addEventListener("click", () => choose(+b.dataset.i)));
-    $("opts").firstChild.focus({preventScroll:true});
+    $("opts").querySelector(".opt").focus({preventScroll:true});
   }
 }
 
 function choose(i){
   if (answered) return;
-  const btns = [...$("opts").children];
+  const btns = [...$("opts").querySelectorAll(".opt")];
   cur.opts.forEach((o, j) => { btns[j].disabled = true; if (o.ok) btns[j].classList.add("ok"); else if (j === i) btns[j].classList.add("bad"); });
   finishItem(cur.opts[i].ok, "");
 }
@@ -983,7 +1036,7 @@ $("q").addEventListener("input", renderBrowse);
 /* Keyboard: 1–4 choose an option, Enter goes on. */
 document.addEventListener("keydown", e => {
   if ($("quiz").classList.contains("hidden")) return;
-  if (document.activeElement && document.activeElement.id === "tIn") return;
+  if (document.activeElement && (document.activeElement.id === "tIn" || document.activeElement.classList.contains("say"))) return;
   const n = parseInt(e.key, 10);
   if (!answered && cur && $("opts") && n >= 1 && n <= cur.opts.length){ e.preventDefault(); choose(n-1); }
   else if (answered && e.key === "Enter" && document.activeElement !== $("nextBtn")){ e.preventDefault(); next(); }
